@@ -1,0 +1,5 @@
+node_modules
+resources/public/js
+.DS_Store
+.nrepl-port
+.shadow-cljs

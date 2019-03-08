@@ -1,0 +1,9 @@
+{:source-paths ["src"]
+ :dependencies [[fulcrologic/fulcro "2.8.4"]
+                [fulcrologic/fulcro-incubator "0.0.30"]
+                [thheller/shadow-cljs "2.8.15"]]
+ :builds       {:app {:target     :browser
+                      :output-dir "resources/public/js"
+                      :asset-path "/js"
+                      :modules    {:main {:entries [repro.core]}}}}
+ :dev-http     {8000 "resources/public"}}
