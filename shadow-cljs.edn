@@ -2,6 +2,7 @@
  :dependencies [[fulcrologic/fulcro "2.8.4"]
                 [fulcrologic/fulcro-incubator "0.0.30"]
                 [fulcrologic/fulcro-inspect "2.2.5"]
+                [com.wsscode/pathom "2.2.7"]
                 [thheller/shadow-cljs "2.8.15"]
                 [binaryage/devtools "0.9.10"]]
  :builds       {:app {:target     :browser
@@ -9,5 +10,5 @@
                       :asset-path "/js"
                       :modules    {:main {:entries [repro.core]}}
                       :devtools   {:preloads   [fulcro.inspect.preload]
-                                   :after-load repro.core/start}}}
+                                   :after-load repro.core/init}}}
  :dev-http     {8000 "resources/public"}}
