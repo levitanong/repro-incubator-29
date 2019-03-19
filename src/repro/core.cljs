@@ -24,25 +24,44 @@
                           (fn [env]
                             (let [capital-class (uism/actor-class env :capital)
                                   temp-id       (prim/tempid)]
-                              (doto
-                                  (-> env
-                                      (assoc-in [::uism/state-map :city/by-id temp-id] {:city/id temp-id})
-                                      (assoc-in [::uism/state-map :country/by-id :singletonia :country/capital] [:city/by-id temp-id])
-                                      (uism/trigger-remote-mutation
-                                       :singletonia
-                                       'repro.core/establish
-                                       {:city/temp-id           temp-id
-                                        ::uism/mutation-remote :remote
-                                        ::pm/returning         capital-class
-                                        ::pm/target            [:country/by-id :singletonia :country/capital]
-                                        }))
-                                js/console.log)))}}}}})
+                              (-> env
+                                  (assoc-in [::uism/state-map :city/by-id temp-id] {:city/id temp-id})
+                                  (assoc-in [::uism/state-map :country/by-id :singletonia :country/capital] [:city/by-id temp-id])
+                                  (uism/trigger-remote-mutation
+                                   :singletonia
+                                   'repro.core/establish
+                                   {:city/temp-id           temp-id
+                                    ::uism/mutation-remote :remote
+                                    ::pm/returning         capital-class
+                                    ::pm/target            [:country/by-id :singletonia :country/capital]
+                                    }))))}}}}})
+
+(defn identify-district
+  [{:district/keys [type id]}]
+  (if (#{:shopping-district} type)
+    [type id]
+    [:other-district id]))
+
+(defsc ShoppingDistrict
+  [this props]
+  {:ident (fn [] (identify-district props))
+   :query [:district/id
+           :district/name
+           :district/type]})
+
+(defsc OtherDistrict
+  [this props]
+  {:ident (fn [] (identify-district props))
+   :query [:district/id
+           :district/name
+           :district/type]})
 
 (defsc District
   [this props]
-  {:ident [:district/by-id :district/id]
-   :query [:district/id
-           :district/name]})
+  {:ident (fn [] (identify-district props))
+   :query (fn []
+            {:shopping-district  (prim/get-query ShoppingDistrict)
+             :other-district     (prim/get-query OtherDistrict)})})
 
 (defsc City
   [this props]
@@ -63,9 +82,7 @@
                            :country/name    "Singletonia"
                            :country/capital (prim/get-initial-state City {})})}
   (dom/div
-    (dom/button {:type    :button
-                 :onClick (fn [e] (uism/trigger! this :singletonian-gov :do-stuff))}
-      "Trigger Remote Mutation")))
+    "lalala"))
 
 (def ui-singletonia (prim/factory Singletonia))
 
@@ -85,7 +102,8 @@
   [{:keys [reconciler]}]
   (uism/begin! reconciler government :singletonian-gov
                {:singletonia (uism/with-actor-class [:country/by-id :singletonia] Singletonia)
-                :capital     (uism/with-actor-class [:city/by-id :none] City)}))
+                :capital     (uism/with-actor-class [:city/by-id :none] City)})
+  (uism/trigger! reconciler :singletonian-gov :do-stuff))
 
 (pc/defmutation establish
   [{:keys [config]}
@@ -97,6 +115,7 @@
     {:city/id        :patagonia
      :city/name      "Patagonia"
      :city/districts [{:district/id   9
+                       :district/type :shopping-district
                        :district/name "District 9"}]
      ::prim/tempids  {temp-id :patagonia}}))
 
@@ -124,25 +143,8 @@
   (pn/pathom-remote
    (mock-parser app {})))
 
-#_(defrecord Remote []
-  network/NetworkBehavior
-  (serialize-requests? [_] true)
-  network/FulcroRemoteI
-  (transmit [this {::network/keys [edn abort-id ok-handler error-handler] :as raw-request}]
-    (js/console.log "remote-query" edn)
-    (let [ast (prim/query->ast1 edn)]
-      (let [temp-id (get-in ast [:params :city/temp-id])]
-        (ok {'repro.core/establish {
-                                    :body {:city/id        temp-id
-                                           :city/name      "Patagonia"
-                                           :city/districts [{:district/id   9
-                                                             :district/name "District 9"}]
-                                           ::prim/tempids  {temp-id :patagonia}}}}))))
-  (abort [this id]
-    (js/console.log "aborting" id)))
-
 (defn ^:export init []
   (reset! app (fc/make-fulcro-client
                {:started-callback fulcro-init
-                :networking       {:remote (new-mock-remote app) #_ (map->Remote {})}}))
+                :networking       {:remote (new-mock-remote app)}}))
   (start))

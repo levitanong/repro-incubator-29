@@ -1,6 +1,10 @@
 {:source-paths ["src"]
  :dependencies [[fulcrologic/fulcro "2.8.4"]
-                [fulcrologic/fulcro-incubator "0.0.30"]
+                [fulcrologic/fulcro-incubator
+                 #_"0.0.22" ;; last working version
+                 #_"0.0.23" ;; first appearance of problem
+                 "0.0.30" ;; latest known version, still shows problem
+                 ]
                 [fulcrologic/fulcro-inspect "2.2.5"]
                 [com.wsscode/pathom "2.2.7"]
                 [thheller/shadow-cljs "2.8.15"]
